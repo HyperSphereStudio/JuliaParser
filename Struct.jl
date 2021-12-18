@@ -1,3 +1,0 @@
-struct Struct
-    
-end

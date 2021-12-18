@@ -1,5 +1,5 @@
-export @print_tree, print_tree, SearcherSettings, SearcherResult, search_expr,
-       search_forany_heads, search_forany_symbols, search_for_symbols, get_var_name, get_var_type,
+export print_tree, @print_tree, SearcherSettings, SearcherResult, search_expr,
+       search_forany_heads, search_forany_symbols, search_for_symbols
        search_for_heads
 
 macro print_tree(expr::Expr)
@@ -16,6 +16,8 @@ function print_tree(expr::Expr; level::Int64=0)
         end
     end
 end
+
+
 
 struct SearcherSettings
     "Returns Bool. Takes in any"
