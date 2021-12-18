@@ -1,6 +1,16 @@
 # JuliaParser
 
 
-Project designed to parse Julia AST effiently into code objects that can then be reemitted into Julia AST. 
+Julia AST Engineering Library.
 
-Why: To enable macros to have greater ability to manipulate Julia Code
+
+Parsers Julia AST into an efficient organized structure of Modules, Structures, Fields etc that can be easily modified. This can then be reemitted back into Julia AST.
+
+Why: To perform complex code analysis without having to worry about syntax of Julia
+
+
+Possible Usages of this:
+     Julia Compiler (To byte code)
+     Adding Object Oriented into Julia
+     
+     
