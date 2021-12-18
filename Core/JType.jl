@@ -5,6 +5,7 @@ mutable struct JType <: AbstractJuliaObject
     Module::JModule
     Types::Vector{AbstractJuliaObject}
 
+    JType(Name::Symbol; Module::JModule=null_module, Types::Vector{AbstractJuliaObject} = []) = JType(Name, Module, Types)
     JType(Name::Symbol, Module::JModule, Types::Vector{AbstractJuliaObject}) = new(Name, Module, Types)
 
     function JType(code, Module::JModule, version::AbstractJuliaVersion)
@@ -35,7 +36,12 @@ function emit(type::JType, version::AbstractJuliaVersion)
     curly_block
 end
 
+function reload(type::JType, version::AbstractJuliaVersion)
+    for t in type.Types
+        reload(t, version)
+    end
+end
 
-function JTypeTest()
+function JTypeTest(version::AbstractJuliaVersion)
 
 end

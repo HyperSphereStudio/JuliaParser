@@ -5,10 +5,10 @@ mutable struct JStruct <: AbstractJuliaObject
 end
 
 
-function emit(type::JStruct, version::AbstractJuliaVersion)
+function emit(jstruct::JStruct, version::AbstractJuliaVersion)
 
 end
 
-function JStructTest()
+function JStructTest(version::AbstractJuliaVersion)
 
 end

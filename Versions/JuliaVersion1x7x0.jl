@@ -5,9 +5,12 @@ struct JuliaVersion1x7x0 <: AbstractJuliaVersion
     Any::JType
 
     function JuliaVersion1x7x0()
-        Core = JModule()
-        Any = JType(:Any, Core, [])
+        Any = JType(:Any)
+        Core = JModule(:Core, "Core.jl", Types = [Any])
 
-        new(Core, Any)
+
+
+        out = new(Core, Any)
+        reload(Core, out)
     end
 end

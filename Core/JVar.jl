@@ -28,7 +28,11 @@ function emit(var::JVar, version::AbstractJuliaVersion)
     return Expr(:(::), var.Name, emit(var.Type))
 end
 
-function JVarTest()
+function reload(var::JVar, version::AbstractJuliaVersion)
+    reload(var.Type)
+end
+
+function JVarTest(version::AbstractJuliaVersion)
     @assert emit(parse(:(x::Vector{Integer}))) == :(x::Vector{Integer})
     @assert emit(parse(:(x))) == :(x)
 

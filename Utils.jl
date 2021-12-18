@@ -1,5 +1,5 @@
 export print_tree, @print_tree, SearcherSettings, SearcherResult, search_expr,
-       search_forany_heads, search_forany_symbols, search_for_symbols
+       search_forany_heads, search_forany_symbols, search_for_symbols,
        search_for_heads
 
 macro print_tree(expr::Expr)
