@@ -1,39 +1,55 @@
-export JVar, JVarTest
+export JVar
 
 mutable struct JVar <: AbstractJuliaObject
-    Name::Symbol
-    Module::JModule
-    Type::JType
+    name::Symbol
+    type::JType
 
-    JVar(Name::Symbol, Module::JModule, Type::JType) = new(Name, Module, Type)
+    JVar() = new(:null, JType())
 
-    function JVar(code, Module::JModule, version::AbstractJuliaVersion)
-        if code isa Symbol
-            return new(code, Module, version.Any)
+    function JVar(expr, context)
+        out = push!(context, JVar())
+        if isanyvar(expr, context)
+            out.name = expr
+            out.type = JType(:Any, context)
+            return out
+        else
+            out.name = expr.args[1]
+            out.type = parse(expr.args[2], context)
+            return out
         end
-        return new(code.args[1], Module, parse)
     end
-
-    Base.isequal(var1::JVar, var2::JVar) = var1.Name == var2.Name && var1.Module == var2.Module && var1.Type == var2.Type
 end
 
-function verifyvardef(code, Module::JModule, version::AbstractJuliaVersion)
-    return code isa Symbol || code.head == :(::)
-end
+isnull(type::JVar) = type.name == :null
+istypedvar(expr, context) = isexpr(expr, :(::))
+isanyvar(expr, context) = expr isa Symbol
+reload(var::JVar, context) = reload(var.type, context)
 
-function emit(var::JVar, version::AbstractJuliaVersion)
-    if var.Type == version.Any
-        return var.Name
+function emit(var::JVar, context)
+    reload(var, context)
+    if isanytype(var.type)
+        return var.name
+    else
+        return Expr(:(::), var.name, emit(var.type, context))
     end
-    return Expr(:(::), var.Name, emit(var.Type))
 end
 
-function reload(var::JVar, version::AbstractJuliaVersion)
-    reload(var.Type)
+function isjvar(expr, context)
+    return (isanyvar(expr, context) || istypedvar(expr, context)) && !(last(context) isa JVar || last(context) isa JType)
 end
 
-function JVarTest(version::AbstractJuliaVersion)
-    @assert emit(parse(:(x::Vector{Integer}))) == :(x::Vector{Integer})
-    @assert emit(parse(:(x))) == :(x)
+function JVarTest(io::IO, context)
+    clear!(context)
+    #Expr Checking
+    println(io, "Var Expr Parsing Check Starting")
+    @assert isanyvar(:x, context) "Var Any Type Check Fail"
+    @assert istypedvar(:(x::Integer), context) "Var Typed Check Fail"
+    println(io, "Var Expr Parsing Check Complete")
 
+    #Gen Expr Checking
+    println(io, "Var Expr Emit Checking Starting")
+    @assert emit(JVar(:x, context), context) == :x "Any Type Expr Rep Failed: "
+    @assert emit(JVar(:(x::Vector), context), context) == :(x::Vector) "Typed Arg Expr Rep Failed 1"
+    @assert emit(JVar(:(x::Vector{Int, Int32}), context), context) == :(x::Vector{Int, Int32}) "Typed Arg Expr Rep Failed 2"
+    println(io, "Var Expr Emit Checking Complete")
 end

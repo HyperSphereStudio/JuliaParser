@@ -2,6 +2,27 @@ module JuliaParser
 
     abstract type AbstractJuliaVersion end
     abstract type AbstractJuliaObject end
+    abstract type AbstractJuliaParser end
+
+    struct SearcherSettings
+        "Returns Bool. Takes in any"
+        fireChecker::Function
+        shallowSearchFirst::Bool
+        skip_count::Int64
+        curr_count::Int64
+
+        SearcherSettings(fireChecker::Function, shallowSearchFirst::Bool, skip_count::Int64) = new(fireChecker, shallowSearchFirst, skip_count, 0)
+    end
+
+    struct SearcherResult
+        parent::Expr
+        pindex::Int32
+        result
+
+        SearcherResult(parent::Expr, pindex) = new(parent, Int32(pindex), parent.args[pindex])
+        SearcherResult(parent::Expr, pindex::Int64, result) = new(parent, Int32(pindex), result)
+    end
+
     struct ParserException <: Exception
         msg::String
         ParserException(msg::String) = new(msg)
@@ -9,54 +30,29 @@ module JuliaParser
         Base.string(p::ParserException) = p.msg
     end
 
-    export ParserException, AbstractJuliaVersion, AbstractJuliaObject, parse, emit
+    export ParserException, AbstractJuliaVersion, AbstractJuliaObject, parse, emit, reload, reveal, lower
 
     include("Utils.jl")
-    include("Core/JModule.jl")
-    include("Core/JType.jl")
-    include("Core/JVar.jl")
-    include("Core/JField.jl")
-    include("Core/JMethod.jl")
-    include("Core/JStruct.jl")
-    include("Core/JExpr.jl")
-    include("Core/JOp.jl")
-    include("Core/JCode.jl")
-
-
-
     include("Versions/JuliaVersion1x7x0.jl")
+    include("Core/JType.jl")
+    include("Core/JContext.jl")
+    include("Core/JVar.jl")
 
-    null_module = JModule(:null_mod)
     latest_version = JuliaVersion1x7x0()
 
+    emit(type::AbstractJuliaObject, context) = ()
+    isnull(type::AbstractJuliaObject) = false
+    reload(type::JType, context) = ()
 
-    function parse(code::Expr, version::AbstractJuliaVersion=JuliaVersion1x7x0)::AbstractJuliaObject
-
+    function parse(code::Expr, mod::Module; version::AbstractJuliaVersion=latest_version)
+        version.Parser(macroexpand(mod, code))
     end
 
-    function emit(jobj::AbstractJuliaObject, version::AbstractJuliaVersion=JuliaVersion1x7x0)::Expr
-
+    function test(io::IO=stdout, version::AbstractJuliaVersion=latest_version)
+        context = JContext(version)
+        JTypeTest(io, context)
+        JVarTest(io, context)
     end
 
-    function reload(jobj::AbstractJuliaObject, version::AbstractJuliaVersion=JuliaVersion1x7x0)
-
-    end
-
-    Base.print(io::IO, jobj::AbstractJuliaObject) = print(io, string(jobj))
-    Base.string(jobj::AbstractJuliaObject) = print_tree(emit(jobj))
-
-
-    function test(version::AbstractJuliaVersion)
-        JTypeTest(version)
-        JVarTest(version)
-        JMethodTest(version)
-        JStructTest(version)
-        JOpTest(version)
-        JFieldTest(version)
-        JModuleTest(version)
-        JCodeTest(version)
-        JExprTest(version)
-    end
+    Base.print(io::IO, jobj::AbstractJuliaObject) = print(io, string(jobj, 0))
 end
-
-using Main.JuliaParser
